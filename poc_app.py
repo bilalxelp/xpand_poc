@@ -4,9 +4,31 @@ import base64
 from transformers import pipeline
 from tqdm.auto import tqdm
 import re
+import langdetect
 import stanza
+
+
 NLP = stanza.Pipeline(lang='en', processors='tokenize')
 
+def remove_non_english(df, column_name):
+    # Create a new column with language codes for each row in the specified column
+    df['lang'] = ''
+    for x in range(len(df)):
+      try:
+        df['lang'][x] = langdetect.detect(df[column_name][x])
+      except langdetect.lang_detect_exception.LangDetectException:
+        df['lang'][x] = None
+    
+    # Filter the DataFrame to only include rows with English text in the specified column
+    df = df[df['lang'] == 'en']
+    
+    # Reset the index of the DataFrame
+    df = df.reset_index(drop=True)
+    
+    # Drop the 'lang' column
+    df = df.drop(columns='lang')
+    
+    return df
 
 def stanza_tokenizer(text):
     doc = NLP(str(text))
@@ -72,24 +94,24 @@ def Toxic_Detection(df, column_name):
 def process_data(df, column_name, tab_name):
     if tab_name == 'Viewpoint Classifier':
         # Process data using option 1
-        df = df[:10]
-        df['Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-        df = df.explode("Sentences").reset_index(drop=True)
-        df = Viewpoint_classifier(df, "Sentences")
+        df = remove_non_english(df, column_name)
+        df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
+        df = df.explode("Split Sentences").reset_index(drop=True)
+        df = Viewpoint_classifier(df, "Split Sentences")
 
     elif tab_name == 'Stance Feminist':
         # Process data using option 2
-        df = df[:10]
-        df['Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-        df = df.explode("Sentences").reset_index(drop=True)
-        df = stance_feminist(df, "Sentences")
+        df = remove_non_english(df, column_name)
+        df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
+        df = df.explode("Split Sentences").reset_index(drop=True)
+        df = stance_feminist(df, "Split Sentences")
 
     elif tab_name == 'Toxicity Detection':
         # Process data using option 3
-        df = df[:10]
-        df['Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-        df = df.explode("Sentences").reset_index(drop=True)
-        df = Toxic_Detection(df, "Sentences")
+        df = remove_non_english(df, column_name)
+        df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
+        df = df.explode("Split Sentences").reset_index(drop=True)
+        df = Toxic_Detection(df, "Split Sentences")
 
     # Add more options as needed
     
@@ -104,6 +126,9 @@ def main():
 
     # Set the sidebar options
     options = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection']
+    option_selected = st.sidebar.selectbox("Select a model:", options)
+    
+
     # Add more options as needed
 
     # Set the sidebar inputs
@@ -125,7 +150,6 @@ def main():
             st.error(f"The column '{column_name}' does not exist in the uploaded file.")
         else:
             # Process the data based on the selected option
-            option_selected = st.sidebar.selectbox("Select a model:", options)
             processed_data = process_data(df, column_name, option_selected)
 
             # Display the processed data
