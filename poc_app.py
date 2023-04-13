@@ -6,6 +6,8 @@ from tqdm.auto import tqdm
 import re
 import langdetect
 import stanza
+import requests
+import ast
 
 
 NLP = stanza.Pipeline(lang='en', processors='tokenize')
@@ -89,29 +91,169 @@ def Toxic_Detection(df, column_name):
 
   return df
 
+def personality_trait(df, column_name):
+    payload = []
+    for x in range(len(df)):
+        record = {}
+        record['id'] = str(x)
+        record['language'] = 'en'
+        record['text'] = df[column_name][x]
+        payload.append(record)
+        
+    #Creating batches as the API endpoint can take only 32 records at a time
+    batch_size=32
+    payload_output = []
+
+    for i in range(0, len(payload), batch_size):
+        batch = payload[i:i+batch_size]
+        # Do something with the batch
+        url = "https://personality-traits.p.rapidapi.com/personality"
+
+        headers = {
+            "content-type": "application/json",
+            "Accept": "application/json",
+            "X-RapidAPI-Key": "b794ac4d55mshe86a24a1cefa05dp142362jsn9fd5fc8e58c0",
+            "X-RapidAPI-Host": "personality-traits.p.rapidapi.com"
+        }
+
+        response = requests.request("POST", url, json=batch, headers=headers)
+
+        for x in ast.literal_eval(response.text):
+            payload_output.append(x)
+            
+    all_preds = []
+    for p in payload_output:
+        preds = {}
+        preds['prediction'] = p['predictions'][0]['prediction']
+        preds['probability'] = p['predictions'][0]['probability']
+        all_preds.append(preds)
+        
+    preds_df = pd.DataFrame(all_preds)
+    output_df = pd.concat([df, preds_df], axis=1)
+    
+    return output_df
+
+def communication_style(df, column_name):
+    payload = []
+    for x in range(len(df)):
+        record = {}
+        record['id'] = str(x)
+        record['language'] = 'en'
+        record['text'] = df[column_name][x]
+        payload.append(record)
+        
+    #Creating batches as the API endpoint can take only 32 records at a time
+    batch_size=32
+    payload_output = []
+    
+    for i in range(0, len(payload), batch_size):
+        batch = payload[i:i+batch_size]
+        # Processing the batch through API
+        url = "https://communication-style.p.rapidapi.com/communication"
+
+        headers = {
+                "content-type": "application/json",
+                "Accept": "application/json",
+                "X-RapidAPI-Key": "73156eb069msh891b3ea9b066ce0p14328ajsn2dbf8916c7b9",
+                "X-RapidAPI-Host": "communication-style.p.rapidapi.com"
+        }
+
+        response = requests.request("POST", url, json=batch, headers=headers)
+
+        for x in ast.literal_eval(response.text):
+            payload_output.append(x)
+            
+    #Mapping model outputs to the original dataframe
+    all_preds = []
+    for e in payload_output:
+        preds = {}
+        for p in e['predictions']:
+            if p['prediction'] == "self-revealing":
+                preds["self-revealing"] = p['probability']
+
+            elif p['prediction'] == "fact-oriented":
+                preds["fact-oriented"] = p['probability']
+
+            elif p['prediction'] == "action-seeking":
+                preds["action-seeking"] = p['probability']
+
+            elif p['prediction'] == "information-seeking":
+                preds["information-seeking"] = p['probability']
+        all_preds.append(preds)
+        
+    preds_df = pd.DataFrame(all_preds)
+    output_df = pd.concat([df, preds_df], axis=1)
+    
+    return output_df
+
+def big_five_personality(df, column_name):
+    payload = []
+    for x in range(len(df)):
+        record = {}
+        record['id'] = str(x)
+        record['language'] = 'en'
+        record['text'] = df[column_name][x]
+        payload.append(record)
+        
+    batch_size = 15
+    payload_output = []
+
+    for i in range(0, len(payload), batch_size):
+        batch = payload[i:i+batch_size]
+        # Do something with the batch
+        url = "https://big-five-personality-insights.p.rapidapi.com/api/big5"
+
+        headers = {
+            "content-type": "application/json",
+            "X-RapidAPI-Key": "b794ac4d55mshe86a24a1cefa05dp142362jsn9fd5fc8e58c0",
+            "X-RapidAPI-Host": "big-five-personality-insights.p.rapidapi.com"
+        }
+
+        response = requests.request("POST", url, json=batch, headers=headers)
+
+        for x in ast.literal_eval(response.text):
+            payload_output.append(x)
+            
+    preds_df = pd.DataFrame(payload_output)
+    preds_df.drop('id', axis=1, inplace=True)
+
+    output_df = pd.concat([df, preds_df], axis=1)
+    
+    return output_df
+
 
 # Function to process the selected tab
 def process_data(df, column_name, tab_name):
+    
     if tab_name == 'Viewpoint Classifier':
-        # Process data using option 1
-        df = remove_non_english(df, column_name)
-        df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-        df = df.explode("Split Sentences").reset_index(drop=True)
-        df = Viewpoint_classifier(df, "Split Sentences")
+      df = remove_non_english(df, column_name)
+      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
+      df = df.explode("Split Sentences").reset_index(drop=True)
+      df = Viewpoint_classifier(df, "Split Sentences")
 
     elif tab_name == 'Stance Feminist':
-        # Process data using option 2
-        df = remove_non_english(df, column_name)
-        df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-        df = df.explode("Split Sentences").reset_index(drop=True)
-        df = stance_feminist(df, "Split Sentences")
+      df = remove_non_english(df, column_name)
+      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
+      df = df.explode("Split Sentences").reset_index(drop=True)
+      df = stance_feminist(df, "Split Sentences")
 
     elif tab_name == 'Toxicity Detection':
-        # Process data using option 3
-        df = remove_non_english(df, column_name)
-        df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-        df = df.explode("Split Sentences").reset_index(drop=True)
-        df = Toxic_Detection(df, "Split Sentences")
+      df = remove_non_english(df, column_name)
+      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
+      df = df.explode("Split Sentences").reset_index(drop=True)
+      df = Toxic_Detection(df, "Split Sentences")
+
+    elif tab_name == 'Personality Trait':
+      df = remove_non_english(df, column_name)
+      df = personality_trait(df, column_name)
+
+    elif tab_name == 'Communication Style':
+      df = remove_non_english(df, column_name)
+      df = communication_style(df, column_name)
+
+    elif tab_name == 'Big-5 Personality':
+      df = remove_non_english(df, column_name)
+      df = big_five_personality(df, column_name)
 
     # Add more options as needed
     
@@ -125,7 +267,7 @@ def main():
 
 
     # Set the sidebar options
-    options = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection']
+    options = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection', 'Personality Trait', 'Communication Style', 'Big-5 Personality']
     option_selected = st.sidebar.selectbox("Select a model:", options)
     
 
