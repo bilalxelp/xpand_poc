@@ -225,6 +225,8 @@ def big_five_personality(df, column_name):
 # Function to process the selected tab
 def process_data(df, column_name, tab_name):
     
+    df.reset_index(inplace=True, drop=True)
+    
     if tab_name == 'Viewpoint Classifier':
       df = remove_non_english(df, column_name)
       df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
