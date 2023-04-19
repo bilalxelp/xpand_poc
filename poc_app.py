@@ -10,7 +10,6 @@ import requests
 import ast
 
 
-NLP = stanza.Pipeline(lang='en', processors='tokenize')
 
 def remove_non_english(df, column_name):
     # Create a new column with language codes for each row in the specified column
@@ -33,6 +32,8 @@ def remove_non_english(df, column_name):
     return df
 
 def stanza_tokenizer(text):
+    NLP = stanza.Pipeline(lang='en', processors='tokenize')
+    
     doc = NLP(str(text))
     
     sent_list = []
