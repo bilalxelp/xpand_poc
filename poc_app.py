@@ -113,7 +113,7 @@ def personality_trait(df, column_name):
         headers = {
             "content-type": "application/json",
             "Accept": "application/json",
-            "X-RapidAPI-Key": "5337da9883mshaccbbe1bee3610dp1ac0eejsn10b47af05ab4",
+            "X-RapidAPI-Key": "9303812463msh066f964925ba79cp183e0ajsn6475462a06c2",
             "X-RapidAPI-Host": "personality-traits.p.rapidapi.com"
         }
 
@@ -155,7 +155,7 @@ def communication_style(df, column_name):
         headers = {
                 "content-type": "application/json",
                 "Accept": "application/json",
-                "X-RapidAPI-Key": "5337da9883mshaccbbe1bee3610dp1ac0eejsn10b47af05ab4",
+                "X-RapidAPI-Key": "9303812463msh066f964925ba79cp183e0ajsn6475462a06c2",
                 "X-RapidAPI-Host": "communication-style.p.rapidapi.com"
         }
 
@@ -206,7 +206,7 @@ def big_five_personality(df, column_name):
 
         headers = {
             "content-type": "application/json",
-            "X-RapidAPI-Key": "5337da9883mshaccbbe1bee3610dp1ac0eejsn10b47af05ab4",
+            "X-RapidAPI-Key": "9303812463msh066f964925ba79cp183e0ajsn6475462a06c2",
             "X-RapidAPI-Host": "big-five-personality-insights.p.rapidapi.com"
         }
 
