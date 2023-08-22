@@ -48,6 +48,11 @@ def stanza_tokenizer(text):
         
     return clean_sent
 
+#Listing huggingface models
+view_classifier = None
+feminist_classifier = None
+toxic_classifier = None
+
 def Viewpoint_classifier(df, column_name):
 
   if view_classifier is None:
