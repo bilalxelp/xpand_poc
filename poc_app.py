@@ -49,7 +49,7 @@ def stanza_tokenizer(text):
         
     return clean_sent
 
-def Viewpoint_classifier(df, column_name):
+def viewpoint_classifier(df, column_name):
   
   classifier = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
 
@@ -78,7 +78,7 @@ def stance_feminist(df, column_name):
 
   return df
 
-def Toxic_Detection(df, column_name):
+def toxic_Detection(df, column_name):
 
   classifier = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
 
@@ -234,7 +234,7 @@ def process_data(df, column_name, tab_name):
       df_copy = remove_non_english(df_copy, column_name)
       df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
       df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
-      df_copy = Viewpoint_classifier(df_copy, "Split Sentences")
+      df_copy = viewpoint_classifier(df_copy, "Split Sentences")
 
     elif tab_name == 'Stance Feminist':
       df_copy = remove_non_english(df_copy, column_name)
@@ -246,7 +246,7 @@ def process_data(df, column_name, tab_name):
       df_copy = remove_non_english(df_copy, column_name)
       df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
       df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
-      df_copy = Toxic_Detection(df_copy, "Split Sentences")
+      df_copy = toxic_Detection(df_copy, "Split Sentences")
 
     elif tab_name == 'Personality Trait':
       df_copy = remove_non_english(df_copy, column_name)
