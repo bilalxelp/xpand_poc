@@ -55,45 +55,43 @@ def viewpoint_classifier(df, column_name):
     
     viewpoint_classifier_model = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
     
-
-  df['Viewpoint'] = ''
-
-  for x in range(len(df)):
-    result = viewpoint_classifier_model(str(df[column_name][x]))
-    if result[0]['label'] == 'LABEL_0':
-      df['Viewpoint'][x] = "Opinion"
+	df['Viewpoint'] = ''
+    
+    for x in range(len(df)):
+		result = viewpoint_classifier_model(str(df[column_name][x]))
+        if result[0]['label'] == 'LABEL_0':
+			df['Viewpoint'][x] = "Opinion"
     elif result[0]['label'] == 'LABEL_1':
-      df['Viewpoint'][x] = "Fact"
-
-  return df
+		df['Viewpoint'][x] = "Fact"
+    
+      return df
 
 def stance_feminist(df, column_name):
     
-    stance_feminist_classifier_model = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
-
-  df['Label'] = ''
-  df['Score'] = ''
-
-  for x in range(len(df)):
-    result = stance_feminist_classifier_model(df[column_name][x])
-    df['Label'][x] = result[0]['label']
-    df['Score'][x] = result[0]['score']
-
-  return df
+	stance_feminist_classifier_model = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
+	
+	df['Label'] = ''
+	df['Score'] = ''
+	for x in range(len(df)):
+		result = stance_feminist_classifier_model(df[column_name][x])
+		df['Label'][x] = result[0]['label']
+		df['Score'][x] = result[0]['score']
+		
+	return df
 
 def toxic_Detection(df, column_name):
     
     toxicity_classifier_model = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
+	
+	df['Label'] = ''
+	df['Score'] = ''
 
-  df['Label'] = ''
-  df['Score'] = ''
+	for x in range(len(df)):
+    	result = toxicity_classifier_model(df[column_name][x])
+    	df['Label'][x] = result[0]['label']
+    	df['Score'][x] = result[0]['score']
 
-  for x in range(len(df)):
-    result = toxicity_classifier_model(df[column_name][x])
-    df['Label'][x] = result[0]['label']
-    df['Score'][x] = result[0]['score']
-
-  return df
+	return df
 
 def personality_trait(df, column_name):
     payload = []
