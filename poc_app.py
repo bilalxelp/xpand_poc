@@ -230,35 +230,40 @@ def process_data(df, column_name, tab_name):
     
     df_copy.reset_index(inplace=True, drop=True)
     
-    if tab_name == 'Viewpoint Classifier':
-      df_copy = remove_non_english(df_copy, column_name)
-      df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
-      df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
-      df_copy = viewpoint_classifier(df_copy, "Split Sentences")
+    try:
+        if tab_name == 'Viewpoint Classifier':
+          df_copy = remove_non_english(df_copy, column_name)
+          df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
+          df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
+          df_copy = viewpoint_classifier(df_copy, "Split Sentences")
+    
+        elif tab_name == 'Stance Feminist':
+          df_copy = remove_non_english(df_copy, column_name)
+          df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
+          df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
+          df_copy = stance_feminist(df_copy, "Split Sentences")
+    
+        elif tab_name == 'Toxicity Detection':
+          df_copy = remove_non_english(df_copy, column_name)
+          df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
+          df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
+          df_copy = toxic_Detection(df_copy, "Split Sentences")
+    
+        elif tab_name == 'Personality Trait':
+          df_copy = remove_non_english(df_copy, column_name)
+          df_copy = personality_trait(df_copy, column_name)
+    
+        elif tab_name == 'Communication Style':
+          df_copy = remove_non_english(df_copy, column_name)
+          df_copy = communication_style(df_copy, column_name)
+    
+        elif tab_name == 'Big-5 Personality':
+          df_copy = remove_non_english(df_copy, column_name)
+          df_copy = big_five_personality(df_copy, column_name)
 
-    elif tab_name == 'Stance Feminist':
-      df_copy = remove_non_english(df_copy, column_name)
-      df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
-      df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
-      df_copy = stance_feminist(df_copy, "Split Sentences")
-
-    elif tab_name == 'Toxicity Detection':
-      df_copy = remove_non_english(df_copy, column_name)
-      df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
-      df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
-      df_copy = toxic_Detection(df_copy, "Split Sentences")
-
-    elif tab_name == 'Personality Trait':
-      df_copy = remove_non_english(df_copy, column_name)
-      df_copy = personality_trait(df_copy, column_name)
-
-    elif tab_name == 'Communication Style':
-      df_copy = remove_non_english(df_copy, column_name)
-      df_copy = communication_style(df_copy, column_name)
-
-    elif tab_name == 'Big-5 Personality':
-      df_copy = remove_non_english(df_copy, column_name)
-      df_copy = big_five_personality(df_copy, column_name)
+    except Exception as e:
+        st.error(f"An error occurred while processing the data: {e}")
+        df_copy = pd.DataFrame()
 
     # Add more options as needed
     
