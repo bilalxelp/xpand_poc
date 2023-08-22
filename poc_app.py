@@ -49,16 +49,12 @@ def stanza_tokenizer(text):
         
     return clean_sent
 
-#Defining huggingface models
-
-viewpoint_classifier_model = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
-stance_feminist_classifier_model = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
-toxicity_classifier_model = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
-
-
 
 
 def viewpoint_classifier(df, column_name):
+    
+    viewpoint_classifier_model = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
+    
 
   df['Viewpoint'] = ''
 
@@ -72,6 +68,8 @@ def viewpoint_classifier(df, column_name):
   return df
 
 def stance_feminist(df, column_name):
+    
+    stance_feminist_classifier_model = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
 
   df['Label'] = ''
   df['Score'] = ''
@@ -84,6 +82,8 @@ def stance_feminist(df, column_name):
   return df
 
 def toxic_Detection(df, column_name):
+    
+    toxicity_classifier_model = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
 
   df['Label'] = ''
   df['Score'] = ''
