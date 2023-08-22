@@ -49,13 +49,14 @@ def stanza_tokenizer(text):
     return clean_sent
 
 def Viewpoint_classifier(df, column_name):
-  
-  classifier = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
+
+  if view_classifier is None:
+    view_classifier = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
 
   df['Viewpoint'] = ''
 
   for x in range(len(df)):
-    result = classifier(str(df[column_name][x]))
+    result = view_classifier(str(df[column_name][x]))
     if result[0]['label'] == 'LABEL_0':
       df['Viewpoint'][x] = "Opinion"
     elif result[0]['label'] == 'LABEL_1':
@@ -65,13 +66,14 @@ def Viewpoint_classifier(df, column_name):
 
 def stance_feminist(df, column_name):
 
-  classifier = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
+  if feminist_classifier is None:  
+    feminist_classifier = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
 
   df['Label'] = ''
   df['Score'] = ''
 
   for x in range(len(df)):
-    result = classifier(df[column_name][x])
+    result = feminist_classifier(df[column_name][x])
     df['Label'][x] = result[0]['label']
     df['Score'][x] = result[0]['score']
 
@@ -79,13 +81,14 @@ def stance_feminist(df, column_name):
 
 def Toxic_Detection(df, column_name):
 
-  classifier = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
+  if toxic_classifier is None:  
+    classifier = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
 
   df['Label'] = ''
   df['Score'] = ''
 
   for x in range(len(df)):
-    result = classifier(df[column_name][x])
+    result = toxic_classifier(df[column_name][x])
     df['Label'][x] = result[0]['label']
     df['Score'][x] = result[0]['score']
 
