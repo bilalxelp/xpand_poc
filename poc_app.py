@@ -30,7 +30,7 @@ def remove_non_english(df, column_name):
     
     return df
 
-
+print("Loading Stanza")
 NLP = stanza.Pipeline(lang='en', processors='tokenize')
 
 def stanza_tokenizer(text):
