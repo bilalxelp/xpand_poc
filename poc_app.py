@@ -226,41 +226,44 @@ def big_five_personality(df, column_name):
 # Function to process the selected tab
 def process_data(df, column_name, tab_name):
     
-    df.reset_index(inplace=True, drop=True)
+    df_copy = df.copy()  # Create a copy of the original DataFrame
+    
+    df_copy.reset_index(inplace=True, drop=True)
     
     if tab_name == 'Viewpoint Classifier':
-      df = remove_non_english(df, column_name)
-      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-      df = df.explode("Split Sentences").reset_index(drop=True)
-      df = Viewpoint_classifier(df, "Split Sentences")
+      df_copy = remove_non_english(df_copy, column_name)
+      df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
+      df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
+      df_copy = Viewpoint_classifier(df_copy, "Split Sentences")
 
     elif tab_name == 'Stance Feminist':
-      df = remove_non_english(df, column_name)
-      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-      df = df.explode("Split Sentences").reset_index(drop=True)
-      df = stance_feminist(df, "Split Sentences")
+      df_copy = remove_non_english(df_copy, column_name)
+      df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
+      df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
+      df_copy = stance_feminist(df_copy, "Split Sentences")
 
     elif tab_name == 'Toxicity Detection':
-      df = remove_non_english(df, column_name)
-      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-      df = df.explode("Split Sentences").reset_index(drop=True)
-      df = Toxic_Detection(df, "Split Sentences")
+      df_copy = remove_non_english(df_copy, column_name)
+      df_copy['Split Sentences'] = df_copy[column_name].apply(lambda x: stanza_tokenizer(x))
+      df_copy = df_copy.explode("Split Sentences").reset_index(drop=True)
+      df_copy = Toxic_Detection(df_copy, "Split Sentences")
 
     elif tab_name == 'Personality Trait':
-      df = remove_non_english(df, column_name)
-      df = personality_trait(df, column_name)
+      df_copy = remove_non_english(df_copy, column_name)
+      df_copy = personality_trait(df_copy, column_name)
 
     elif tab_name == 'Communication Style':
-      df = remove_non_english(df, column_name)
-      df = communication_style(df, column_name)
+      df_copy = remove_non_english(df_copy, column_name)
+      df_copy = communication_style(df_copy, column_name)
 
     elif tab_name == 'Big-5 Personality':
-      df = remove_non_english(df, column_name)
-      df = big_five_personality(df, column_name)
+      df_copy = remove_non_english(df_copy, column_name)
+      df_copy = big_five_personality(df_copy, column_name)
 
     # Add more options as needed
     
-    return df
+    return df_copy  # Return the processed copy of the DataFrame
+
 
 
 def main():
