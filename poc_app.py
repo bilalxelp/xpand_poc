@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 import base64
+from tqdm.auto import tqdm
+import requests
+import ast
+import base64
 from transformers import pipeline
 from tqdm.auto import tqdm
 import re
@@ -30,10 +34,8 @@ def remove_non_english(df, column_name):
     
     return df
 
-print("Loading Stanza")
-NLP = stanza.Pipeline(lang='en', processors='tokenize')
-
 def stanza_tokenizer(text):
+    NLP = stanza.Pipeline(lang='en', processors='tokenize')
     
     doc = NLP(str(text))
     
@@ -50,15 +52,14 @@ def stanza_tokenizer(text):
         
     return clean_sent
 
-
 def Viewpoint_classifier(df, column_name):
-
-  view_classifier = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
+  
+  classifier = pipeline("text-classification", model="lighteternal/fact-or-opinion-xlmr-el", tokenizer="lighteternal/fact-or-opinion-xlmr-el")
 
   df['Viewpoint'] = ''
 
   for x in range(len(df)):
-    result = view_classifier(str(df[column_name][x]))
+    result = classifier(str(df[column_name][x]))
     if result[0]['label'] == 'LABEL_0':
       df['Viewpoint'][x] = "Opinion"
     elif result[0]['label'] == 'LABEL_1':
@@ -68,13 +69,13 @@ def Viewpoint_classifier(df, column_name):
 
 def stance_feminist(df, column_name):
 
-  feminist_classifier = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
+  classifier = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-stance-feminist", tokenizer="cardiffnlp/twitter-roberta-base-stance-feminist")
 
   df['Label'] = ''
   df['Score'] = ''
 
   for x in range(len(df)):
-    result = feminist_classifier(df[column_name][x])
+    result = classifier(df[column_name][x])
     df['Label'][x] = result[0]['label']
     df['Score'][x] = result[0]['score']
 
@@ -82,13 +83,13 @@ def stance_feminist(df, column_name):
 
 def Toxic_Detection(df, column_name):
 
-  toxic_classifier = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
+  classifier = pipeline("text-classification", model="martin-ha/toxic-comment-model", tokenizer="martin-ha/toxic-comment-model")
 
   df['Label'] = ''
   df['Score'] = ''
 
   for x in range(len(df)):
-    result = toxic_classifier(df[column_name][x])
+    result = classifier(df[column_name][x])
     df['Label'][x] = result[0]['label']
     df['Score'][x] = result[0]['score']
 
@@ -225,90 +226,42 @@ def big_five_personality(df, column_name):
     return output_df
 
 
-# Function to process the selected tab
-def process_data(df, column_name, tab_name):
-    
-    df.reset_index(inplace=True, drop=True)
-    
-    if tab_name == 'Viewpoint Classifier':
-      df = remove_non_english(df, column_name)
-      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-      df = df.explode("Split Sentences").reset_index(drop=True)
-      df = Viewpoint_classifier(df, "Split Sentences")
 
-    elif tab_name == 'Stance Feminist':
-      df = remove_non_english(df, column_name)
-      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-      df = df.explode("Split Sentences").reset_index(drop=True)
-      df = stance_feminist(df, "Split Sentences")
-
-    elif tab_name == 'Toxicity Detection':
-      df = remove_non_english(df, column_name)
-      df['Split Sentences'] = df[column_name].apply(lambda x: stanza_tokenizer(x))
-      df = df.explode("Split Sentences").reset_index(drop=True)
-      df = Toxic_Detection(df, "Split Sentences")
-
-    elif tab_name == 'Personality Trait':
-      df = remove_non_english(df, column_name)
-      df = personality_trait(df, column_name)
-
-    elif tab_name == 'Communication Style':
-      df = remove_non_english(df, column_name)
-      df = communication_style(df, column_name)
-
-    elif tab_name == 'Big-5 Personality':
-      df = remove_non_english(df, column_name)
-      df = big_five_personality(df, column_name)
-
-    # Add more options as needed
-    
-    return df
-
-
-# Define the Streamlit app
+# Main Streamlit app
 def main():
-    # Set the page title and icon
-    # st.set_page_config(page_title='Data Processor', page_icon=':pencil:')
-    st.set_page_config(page_title='My Streamlit App', page_icon=':bar_chart:', layout='wide', initial_sidebar_state='auto')
-
-    # Set the sidebar options
-    options = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection', 'Personality Trait', 'Communication Style', 'Big-5 Personality']
-    option_selected = st.sidebar.selectbox("Select a model:", options)
+    st.title("Text Classification Playground")
     
-    # Set the sidebar inputs
-    uploaded_file = st.file_uploader("Upload a CSV or Excel file")
-    column_name = st.text_input("Enter the column name to process")
+    # Create tabs
+    tab_names = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection', 'Personality Trait', 'Communication Style', 'Big-5 Personality']
+    tab_contents = [Viewpoint_classifier, stance_feminist, Toxic_Detection, personality_trait, communication_style, big_five_personality]  # Replace with your model functions
     
-    # Add a "Submit" button
-    submit_button = st.button("Submit")
+    tab = st.selectbox("Select Model:", tab_names)
+    idx = tab_names.index(tab)
+    
+    st.subheader(f"{tab} Model")
+    
+    # File upload and column input
+    uploaded_file = st.file_uploader("Upload CSV or Excel file:", type=["csv", "xlsx"])
+    
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)  # You can also use pd.read_excel for Excel files
+        st.dataframe(df.head())
+        
+        column_name = st.text_input("Enter Column Name to Process:")
+        
+        if st.button("Submit"):
+            if column_name:
+                processed_df = tab_contents[idx](df, column_name)
+                st.dataframe(processed_df)
+                
+                # Offer download link for the processed DataFrame
+                csv = processed_df.to_csv(index=False)
+                st.download_button(
+                    label="Download Processed CSV",
+                    data=csv,
+                    file_name=f"{tab}_processed.csv",
+                    mime="text/csv",
+                )
 
-    # Check if file was uploaded and column name is provided, and if the "Submit" button is clicked
-    if submit_button and uploaded_file is not None and column_name != "":
-        # Read the file into a DataFrame
-        if uploaded_file.name.endswith('csv'):
-            df = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.endswith('xls') or uploaded_file.name.endswith('xlsx'):
-            df = pd.read_excel(uploaded_file)
-        else:
-            st.error("Invalid file type. Please upload a CSV or Excel file.")
-
-        # Check if the selected column exists in the DataFrame
-        if column_name not in df.columns:
-            st.error(f"The column '{column_name}' does not exist in the uploaded file.")
-        else:
-            # Process the data based on the selected option
-            processed_data = process_data(df, column_name, option_selected)
-
-            # Display the processed data
-            st.write("Processed Data:")
-            st.write(processed_data)
-
-            # Allow the user to download the processed data as a CSV file
-            csv = processed_data.to_csv(index=False)
-            b64 = base64.b64encode(csv.encode()).decode()
-            href = f'<a href="data:file/csv;base64,{b64}" download="processed_data.csv">Download processed data</a>'
-            st.markdown(href, unsafe_allow_html=True)
-
-# Run the app
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
