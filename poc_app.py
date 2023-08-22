@@ -12,13 +12,7 @@ import langdetect
 import stanza
 import requests
 import ast
-from streamlit.report_thread import get_report_ctx
-from streamlit.server.server import Server
 
-class SessionState:
-    def __init__(self, **kwargs):
-        for key, val in kwargs.items():
-            setattr(self, key, val)
 
 
 def remove_non_english(df, column_name):
@@ -241,11 +235,6 @@ def main():
     # Create tabs
     tab_names = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection', 'Personality Trait', 'Communication Style', 'Big-5 Personality']
     tab_contents = [Viewpoint_classifier, stance_feminist, Toxic_Detection, personality_trait, communication_style, big_five_personality]  
-
-    session_state = SessionState(tab_idx=0, uploaded_file=None, column_name="")
-    
-    tab = st.selectbox("Select Model:", tab_names, index=session_state.tab_idx)
-    session_state.tab_idx = tab_names.index(tab)
     
     tab = st.selectbox("Select Model:", tab_names)
     idx = tab_names.index(tab)
@@ -268,11 +257,10 @@ def main():
         if column_name not in df.columns:
             st.error(f"The column '{column_name}' does not exist in the uploaded file.")
         
-        session_state.column_name = column_name
         
         if st.button("Submit"):
             if column_name:
-                processed_df = tab_contents[session_state.tab_idx](df, column_name)
+                processed_df = tab_contents[idx](df, column_name)
                 st.dataframe(processed_df)
                 
                 # Offer download link for the processed DataFrame
