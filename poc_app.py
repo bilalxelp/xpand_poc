@@ -233,7 +233,7 @@ def main():
     
     # Create tabs
     tab_names = ['Viewpoint Classifier', 'Stance Feminist', 'Toxicity Detection', 'Personality Trait', 'Communication Style', 'Big-5 Personality']
-    tab_contents = [Viewpoint_classifier, stance_feminist, Toxic_Detection, personality_trait, communication_style, big_five_personality]  # Replace with your model functions
+    tab_contents = [Viewpoint_classifier, stance_feminist, Toxic_Detection, personality_trait, communication_style, big_five_personality]  
     
     tab = st.selectbox("Select Model:", tab_names)
     idx = tab_names.index(tab)
@@ -244,14 +244,64 @@ def main():
     uploaded_file = st.file_uploader("Upload CSV or Excel file:", type=["csv", "xlsx"])
     
     if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)  # You can also use pd.read_excel for Excel files
-        st.dataframe(df.head())
+        # Read the file into a DataFrame
+        if uploaded_file.name.endswith('csv'):
+            df = pd.read_csv(uploaded_file)
+        elif uploaded_file.name.endswith('xls') or uploaded_file.name.endswith('xlsx'):
+            df = pd.read_excel(uploaded_file)
+        else:
+            st.error("Invalid file type. Please upload a CSV or Excel file.")
         
         column_name = st.text_input("Enter Column Name to Process:")
+        if column_name not in df.columns:
+            st.error(f"The column '{column_name}' does not exist in the uploaded file.")
         
         if st.button("Submit"):
             if column_name:
                 processed_df = tab_contents[idx](df, column_name)
+                st.dataframe(processed_df)
+                
+                # Offer download link for the processed DataFrame
+                csv = processed_df.to_csv(index=False)
+                st.download_button(
+                    label="Download Processed CSV",
+                    data=csv,
+                    file_name=f"{tab}_processed.csv",
+                    mime="text/csv",
+                )
+
+if __name__ == "__main__":
+    main()
+
+
+def main():
+    st.title("Machine Learning Model App")
+    
+    # Create tabs
+    tab_names = ["Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"]
+    tab_contents = [model1_process, None, None, None, None, None]  # Replace with your model functions
+    
+    session_state = SessionState(tab_idx=0, uploaded_file=None, column_name="")
+    
+    tab = st.selectbox("Select Model:", tab_names, index=session_state.tab_idx)
+    session_state.tab_idx = tab_names.index(tab)
+    
+    st.subheader(f"{tab} Processing")
+    
+    # File upload and column input
+    uploaded_file = st.file_uploader("Upload CSV or Excel file:", type=["csv", "xlsx"])
+    
+    if uploaded_file is not None:
+        session_state.uploaded_file = uploaded_file
+        df = pd.read_csv(uploaded_file)  # You can also use pd.read_excel for Excel files
+        st.dataframe(df.head())
+        
+        column_name = st.text_input("Enter Column Name:", value=session_state.column_name)
+        session_state.column_name = column_name
+        
+        if st.button("Submit"):
+            if column_name:
+                processed_df = tab_contents[session_state.tab_idx](df, column_name)
                 st.dataframe(processed_df)
                 
                 # Offer download link for the processed DataFrame
