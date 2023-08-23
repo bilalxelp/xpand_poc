@@ -14,7 +14,6 @@ import requests
 import ast
 
 
-
 def remove_non_english(df, column_name):
     # Create a new column with language codes for each row in the specified column
     df['lang'] = ''
