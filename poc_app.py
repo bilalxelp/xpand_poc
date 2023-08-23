@@ -252,25 +252,28 @@ def main():
             df = pd.read_excel(uploaded_file)
         else:
             st.error("Invalid file type. Please upload a CSV or Excel file.")
+
+        st.dataframe(df.head())
         
         column_name = st.text_input("Enter Column Name to Process:")
-        if column_name not in df.columns:
-            st.error(f"The column '{column_name}' does not exist in the uploaded file.")
-        
         
         if st.button("Submit"):
             if column_name:
-                processed_df = tab_contents[idx](df, column_name)
-                st.dataframe(processed_df)
-                
-                # Offer download link for the processed DataFrame
-                csv = processed_df.to_csv(index=False)
-                st.download_button(
-                    label="Download Processed CSV",
-                    data=csv,
-                    file_name=f"{tab}_processed.csv",
-                    mime="text/csv",
-                )
+                if column_name not in df.columns:
+                   st.error(f"The column '{column_name}' does not exist in the uploaded file.")
+
+                else:
+                    processed_df = tab_contents[idx](df, column_name)
+                    st.dataframe(processed_df)
+                    
+                    # Offer download link for the processed DataFrame
+                    csv = processed_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download Processed CSV",
+                        data=csv,
+                        file_name=f"{tab}_processed.csv",
+                        mime="text/csv",
+                    )
 
 if __name__ == "__main__":
     main()
